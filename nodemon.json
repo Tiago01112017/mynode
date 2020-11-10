@@ -1,0 +1,11 @@
+{
+    "env":{
+        "MYSQL_USER": "root",
+        "MYSQL_PASSWORD": "thiago6569",
+        "MYSQL_HOST": "localhost",
+        "MYSQL_DATABASE": "ecommerce",
+        "MYSQL_PORT": 3306,
+
+        "JWP_KEY": "thiago6569"
+    }
+}
