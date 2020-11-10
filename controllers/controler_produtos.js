@@ -1,68 +1,150 @@
-const {pool}  = require('../bancodedados/mys')
+const { response } = require('../app');
+const {pool,execute}  = require('../bancodedados/mys')
 
-exports.getProdutos = (req, res, next)=>{
-    pool.getConnection((error, conn)=>{
-        if(error){return res.status(500).send( {error: error} )}
-        conn.query(
-            "select * from produtos",
-            (erro, resultado, fields)=>{
-                if(erro){ return res.status(500).send( {error: error, produto: null} )}
-                const response = {
-                    quantidade: resultado.length,
-                    produto: resultado.map(prod=>{
-                        return {
-                            idproduto: prod.idprodutos,
-                            imgProduto: prod.imgProduto,
-                            nome: prod.nome,
-                            preco: prod.preco,
-                            request:{
-                                tipo: "get",
-                                url: "http://localhost:3000/produtos/"+ prod.idprodutos
-                            }
-                        }
+//========== esse metodo
 
-                    })
+exports.getProdutos = async(req, res, next)=>{
+   try {
+    const result = await execute('Select * from produtos');
+    const response = {
+            quantidade: result.length,
+            produto: result.map(prod=>{
+            return {
+                idproduto: prod.idprodutos,
+                imgProduto: prod.imgProduto,
+                nome: prod.nome,
+                preco: prod.preco,
+                request:{
+                    tipo: "get",
+                    url: "http://localhost:3000/produtos/"+ prod.idprodutos
                 }
-                return res.status(200).send(response)
             }
-        )
-    })
-};
+        })
+    } 
+    return res.status(200).send(response)
+   } catch (error) {
+       return res.status(500).send({error: error})
+   }
+}
 
-exports.postProduto = (req,res, next)=>{
-    console.log(req.file)
-    pool.getConnection((error, conn)=>{
-        if(error){return res.status(500).send( {error: error} )}
-        conn.query(
-            "insert into produtos (nome, preco, imgProduto) values (?, ?, ?)",
+//========== ou esse
+
+// exports.getProdutos = (req, res, next)=>{
+//     execute("select * from produtos").then((result)=>{
+//         const response = {
+//                 quantidade: result.length,
+//                 produto: result.map(prod=>{
+//                 return {
+//                     idproduto: prod.idprodutos,
+//                     imgProduto: prod.imgProduto,
+//                     nome: prod.nome,
+//                     preco: prod.preco,
+//                     request:{
+//                         tipo: "get",
+//                         url: "http://localhost:3000/produtos/"+ prod.idprodutos
+//                     }
+//                 }
+
+//             })
+//         }
+//         return res.status(200).send(response)
+//     }).catch((error)=>{
+//         return res.status(500).send( {error: error, produto: null} )
+//     })
+// }
+
+//========== ou esse
+
+// exports.getProdutos = (req, res, next)=>{
+//     pool.getConnection((error, conn)=>{
+//         if(error){return res.status(500).send( {error: error} )}
+//         conn.query(
+//             "select * from produtos",
+//             (erro, resultado, fields)=>{
+//                 if(erro){ return res.status(500).send( {error: error, produto: null} )}
+//                 const response = {
+//                     quantidade: resultado.length,
+//                     produto: resultado.map(prod=>{
+//                         return {
+//                             idproduto: prod.idprodutos,
+//                             imgProduto: prod.imgProduto,
+//                             nome: prod.nome,
+//                             preco: prod.preco,
+//                             request:{
+//                                 tipo: "get",
+//                                 url: "http://localhost:3000/produtos/"+ prod.idprodutos
+//                             }
+//                         }
+
+//                     })
+//                 }
+//                 return res.status(200).send(response)
+//             }
+//         )
+//     })
+// };
+
+//========== Com parametros
+
+exports.postProduto = async(req, res, next)=>{
+    try {
+        const query = "insert into produtos (nome, preco, imgProduto) values (?, ?, ?)";
+        const result = await execute(query, 
             [
                 req.body.nome, 
                 req.body.preco,
                 req.file.path
-            ],
-            (error, resultado, fields)=>{
-                conn.release()
-                if(error){return res.status(500).send({error: error, produto: null})}
-                const response = {
-                    mensagem: "Produto Inserido com Sucesso",
-                    idproduto:  resultado.idprodutos,
-                    imgProduto: resultado.imgProduto,
-                    nome:  req.body.nome,
-                    preco: req.body.preco,
-                    request:{
-                        url: "http://localhost:3000/produtos"
-
-                    }
-
-                }
-
-                return res.status(201).send(response)
+            ])
+        const response = {
+            mensagem: "Produto Inserido com Sucesso",
+            idproduto:  result.idprodutos,
+            imgProduto: result.imgProduto,
+            nome:  req.body.nome,
+            preco: req.body.preco,
+            request:{
+                url: "http://localhost:3000/produtos"
             }
-        )
-    })
+        }
+        return res.status(201).send(response)
+    } catch (error) {
+        return res.status(500).send({error: error, produto: null})
+    }
+}
+
+// exports.postProduto = (req,res, next)=>{
+//     console.log(req.file)
+//     pool.getConnection((error, conn)=>{
+//         if(error){return res.status(500).send( {error: error} )}
+//         conn.query(
+//             "insert into produtos (nome, preco, imgProduto) values (?, ?, ?)",
+//             [
+//                 req.body.nome, 
+//                 req.body.preco,
+//                 req.file.path
+//             ],
+//             (error, resultado, fields)=>{
+//                 conn.release()
+//                 if(error){return res.status(500).send({error: error, produto: null})}
+//                 const response = {
+//                     mensagem: "Produto Inserido com Sucesso",
+//                     idproduto:  resultado.idprodutos,
+//                     imgProduto: resultado.imgProduto,
+//                     nome:  req.body.nome,
+//                     preco: req.body.preco,
+//                     request:{
+//                         url: "http://localhost:3000/produtos"
+
+//                     }
+
+//                 }
+
+//                 return res.status(201).send(response)
+//             }
+//         )
+//     })
 
    
-};
+// };
 
 exports.dados = (req, res, next)=>{
     pool.getConnection((error, conn)=>{
